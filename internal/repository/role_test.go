@@ -75,6 +75,33 @@ func (s *RoleTestSuite) TestGetRoles() {
 	})
 }
 
+func (s *RoleTestSuite) TestGetRolesFiltered() {
+	todoID := uuid.NewString()
+
+	s.Run("Failed to get roles", func() {
+		s.mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "roles" WHERE id != $1 ORDER BY id LIMIT $2 OFFSET $3`)).
+			WithArgs(todoID, 1, 1).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		result, err := s.repo.GetRolesFiltered(context.Background(), s.db, 1, 1, "id", "id != ?", todoID)
+		s.ErrorAs(err, &gorm.ErrRecordNotFound)
+		s.Nil(result)
+	})
+
+	s.Run("Get roles successfully", func() {
+		s.mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "roles" WHERE id != $1 ORDER BY id LIMIT $2 OFFSET $3`)).
+			WithArgs(todoID, 1, 1).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "auth_level"}).
+				AddRow(uuid.NewString(), "Admin", 3).
+				AddRow(uuid.NewString(), "Editor", 2).
+				AddRow(uuid.NewString(), "User", 1))
+
+		result, err := s.repo.GetRolesFiltered(context.Background(), s.db, 1, 1, "id", "id != ?", todoID)
+		s.Nil(err)
+		s.Len(result, 3)
+	})
+}
+
 func (s *RoleTestSuite) TestGetRoleByID() {
 	s.Run("Role not found", func() {
 		id := uuid.NewString()
