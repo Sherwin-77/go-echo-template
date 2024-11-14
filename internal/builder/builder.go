@@ -27,21 +27,23 @@ func BuildV1Routes(config *configs.Config, db *gorm.DB, cache caches.Cache, grou
 	// Initialize services
 	tokenService := tokens.NewTokenService(config.JWTSecret)
 	userService := service.NewUserService(tokenService, userRepository, roleRepository, cache)
+	roleService := service.NewRoleService(roleRepository, cache)
 
 	// Initialize handlers
 	userHandler := handler.NewUserHandler(userService)
+	roleHandler := handler.NewRoleHandler(roleService)
 
 	// Register routes
-	routes, middlewares := router.UserRoutes(*userHandler, *middleware, *authMiddleware)
-	for _, route := range routes {
-		m := append(middlewares, route.Middlewares...)
+	userRoutes, userMiddlewares := router.UserRoutes(*userHandler, *authMiddleware)
+	for _, route := range userRoutes {
+		m := append(userMiddlewares, route.Middlewares...)
 		g.Add(route.Method, route.Path, route.Handler, m...)
 	}
 
 	adminGroup := g.Group("/admin")
 
-	adminUserRoutes, adminMiddlewares := router.AdminUserRoutes(*userHandler, *middleware, *authMiddleware)
-	for _, route := range adminUserRoutes {
+	adminRoutes, adminMiddlewares := router.AdminRoutes(*userHandler, *roleHandler, *middleware, *authMiddleware)
+	for _, route := range adminRoutes {
 		m := append(adminMiddlewares, route.Middlewares...)
 		adminGroup.Add(route.Method, route.Path, route.Handler, m...)
 	}
