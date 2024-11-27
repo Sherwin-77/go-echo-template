@@ -15,8 +15,8 @@ type AuthMiddleware struct {
 	db     *gorm.DB
 }
 
-func NewAuthMiddleware(config *configs.Config, db *gorm.DB) *AuthMiddleware {
-	return &AuthMiddleware{config, db}
+func NewAuthMiddleware(config *configs.Config, db *gorm.DB) AuthMiddleware {
+	return AuthMiddleware{config, db}
 }
 
 func (m *AuthMiddleware) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {

@@ -34,7 +34,7 @@ func BuildV1Routes(config *configs.Config, db *gorm.DB, cache caches.Cache, grou
 	roleHandler := handler.NewRoleHandler(roleService)
 
 	// Register routes
-	userRoutes, userMiddlewares := router.UserRoutes(*userHandler, *authMiddleware)
+	userRoutes, userMiddlewares := router.UserRoutes(userHandler, authMiddleware)
 	for _, route := range userRoutes {
 		m := append(userMiddlewares, route.Middlewares...)
 		g.Add(route.Method, route.Path, route.Handler, m...)
@@ -42,7 +42,7 @@ func BuildV1Routes(config *configs.Config, db *gorm.DB, cache caches.Cache, grou
 
 	adminGroup := g.Group("/admin")
 
-	adminRoutes, adminMiddlewares := router.AdminRoutes(*userHandler, *roleHandler, *middleware, *authMiddleware)
+	adminRoutes, adminMiddlewares := router.AdminRoutes(userHandler, roleHandler, middleware, authMiddleware)
 	for _, route := range adminRoutes {
 		m := append(adminMiddlewares, route.Middlewares...)
 		adminGroup.Add(route.Method, route.Path, route.Handler, m...)

@@ -12,8 +12,8 @@ type RoleHandler struct {
 	RoleService service.RoleService
 }
 
-func NewRoleHandler(roleService service.RoleService) *RoleHandler {
-	return &RoleHandler{roleService}
+func NewRoleHandler(roleService service.RoleService) RoleHandler {
+	return RoleHandler{roleService}
 }
 
 func (h *RoleHandler) GetRoles(ctx echo.Context) error {
