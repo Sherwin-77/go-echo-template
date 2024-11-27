@@ -10,8 +10,8 @@ import (
 type Middleware struct {
 }
 
-func NewMiddleware() *Middleware {
-	return &Middleware{}
+func NewMiddleware() Middleware {
+	return Middleware{}
 }
 
 func (m *Middleware) ValidateUUID(params []string) echo.MiddlewareFunc {

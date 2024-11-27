@@ -9,7 +9,7 @@ import (
 	"github.com/sherwin-77/go-echo-template/pkg/route"
 )
 
-func UserRoutes(userHandler handler.UserHandler, middlware middlewares.Middleware, authMiddleware middlewares.AuthMiddleware) ([]route.Route, []echo.MiddlewareFunc) {
+func UserRoutes(userHandler handler.UserHandler, authMiddleware middlewares.AuthMiddleware) ([]route.Route, []echo.MiddlewareFunc) {
 	routes := []route.Route{
 		{
 			Method:      http.MethodPost,
@@ -38,7 +38,7 @@ func UserRoutes(userHandler handler.UserHandler, middlware middlewares.Middlewar
 	return routes, middlewareFuncs
 }
 
-func AdminUserRoutes(userHandler handler.UserHandler, middleware middlewares.Middleware, authMiddleware middlewares.AuthMiddleware) ([]route.Route, []echo.MiddlewareFunc) {
+func AdminRoutes(userHandler handler.UserHandler, roleHandler handler.RoleHandler, middleware middlewares.Middleware, authMiddleware middlewares.AuthMiddleware) ([]route.Route, []echo.MiddlewareFunc) {
 	routes := []route.Route{
 		{
 			Method:      http.MethodGet,
@@ -72,6 +72,42 @@ func AdminUserRoutes(userHandler handler.UserHandler, middleware middlewares.Mid
 			Method:  http.MethodGet,
 			Path:    "/users/:id",
 			Handler: userHandler.GetUserByID,
+			Middlewares: []echo.MiddlewareFunc{
+				middleware.ValidateUUID([]string{"id"}),
+			},
+		},
+		{
+			Method:      http.MethodGet,
+			Path:        "/roles",
+			Handler:     roleHandler.GetRoles,
+			Middlewares: []echo.MiddlewareFunc{},
+		},
+		{
+			Method:      http.MethodPost,
+			Path:        "/roles",
+			Handler:     roleHandler.CreateRole,
+			Middlewares: []echo.MiddlewareFunc{},
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/roles/:id",
+			Handler: roleHandler.GetRoleByID,
+			Middlewares: []echo.MiddlewareFunc{
+				middleware.ValidateUUID([]string{"id"}),
+			},
+		},
+		{
+			Method:  http.MethodPatch,
+			Path:    "/roles/:id",
+			Handler: roleHandler.UpdateRole,
+			Middlewares: []echo.MiddlewareFunc{
+				middleware.ValidateUUID([]string{"id"}),
+			},
+		},
+		{
+			Method:  http.MethodDelete,
+			Path:    "/roles/:id",
+			Handler: roleHandler.DeleteRole,
 			Middlewares: []echo.MiddlewareFunc{
 				middleware.ValidateUUID([]string{"id"}),
 			},
