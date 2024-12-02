@@ -8,10 +8,12 @@ type Response struct {
 }
 
 type Meta struct {
-	Page     int `json:"page"`
-	PerPage  int `json:"per_page"`
-	LastPage int `json:"last_page"`
-	Total    int `json:"total"`
+	Page     int      `json:"page"`
+	PerPage  int      `json:"per_page"`
+	LastPage int      `json:"last_page"`
+	Total    int      `json:"total"`
+	Filters  []string `json:"filters"`
+	Sorts    []string `json:"sorts"`
 }
 
 func NewResponse(code int, message string, data interface{}, meta *Meta) *Response {
