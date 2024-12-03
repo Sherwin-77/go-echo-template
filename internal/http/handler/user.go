@@ -22,13 +22,14 @@ func NewUserHandler(userService service.UserService) UserHandler {
 **/
 
 func (h *UserHandler) GetUsers(ctx echo.Context) error {
-	users, err := h.userService.GetUsers(ctx.Request().Context())
+	users, meta, err := h.userService.GetUsers(ctx.Request().Context(), ctx.QueryParams())
+	usersResponse := dto.NewUsersResponse(users)
 
 	if err != nil {
 		return err
 	}
 
-	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Success", users, nil))
+	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Success", usersResponse, meta))
 }
 
 func (h *UserHandler) GetUserByID(ctx echo.Context) error {
@@ -57,6 +58,7 @@ func (h *UserHandler) CreateUser(ctx echo.Context) error {
 	}
 
 	user, isFirstUser, err := h.userService.Register(ctx.Request().Context(), req)
+	userResponse := dto.NewUserResponse(user)
 
 	if err != nil {
 		return err
@@ -65,7 +67,7 @@ func (h *UserHandler) CreateUser(ctx echo.Context) error {
 	if isFirstUser {
 		msg += ". Because this is the first user, admin role has been assigned"
 	}
-	return ctx.JSON(http.StatusCreated, response.NewResponse(http.StatusCreated, msg, user, nil))
+	return ctx.JSON(http.StatusCreated, response.NewResponse(http.StatusCreated, msg, userResponse, nil))
 }
 
 func (h *UserHandler) UpdateUser(ctx echo.Context) error {
@@ -80,12 +82,13 @@ func (h *UserHandler) UpdateUser(ctx echo.Context) error {
 	}
 
 	user, err := h.userService.UpdateUser(ctx.Request().Context(), req)
+	userResponse := dto.NewUserResponse(user)
 
 	if err != nil {
 		return err
 	}
 
-	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "User Updated", user, nil))
+	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "User Updated", userResponse, nil))
 }
 
 func (h *UserHandler) DeleteUser(ctx echo.Context) error {
