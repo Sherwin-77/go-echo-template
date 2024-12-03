@@ -1,5 +1,7 @@
 package dto
 
+import "github.com/sherwin-77/go-echo-template/internal/entity"
+
 type UserRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Username string `json:"username" validate:"required"`
@@ -16,4 +18,32 @@ type UpdateUserRequest struct {
 type LoginRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
+}
+
+type UserResponse struct {
+	ID       string          `json:"id"`
+	Username string          `json:"username"`
+	Email    string          `json:"email"`
+	Roles    []*RoleResponse `json:"roles,omitempty"`
+}
+
+func NewUserResponse(user *entity.User) UserResponse {
+	userResponse := UserResponse{
+		ID:       user.ID.String(),
+		Username: user.Username,
+		Email:    user.Email,
+	}
+	for _, role := range user.Roles {
+		userResponse.Roles = append(userResponse.Roles, NewRoleResponse(role))
+	}
+
+	return userResponse
+}
+
+func NewUsersResponse(users []entity.User) []UserResponse {
+	var res []UserResponse
+	for _, user := range users {
+		res = append(res, NewUserResponse(&user))
+	}
+	return res
 }

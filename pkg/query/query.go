@@ -1,72 +1,117 @@
 package query
 
 import (
+	"fmt"
 	"github.com/sherwin-77/go-echo-template/pkg/constants"
+	"github.com/sherwin-77/go-echo-template/pkg/response"
 	"gorm.io/gorm"
+	"math"
 	"net/url"
 	"strconv"
 	"strings"
 )
 
+type FilterType string
+type SortDirection string
+
+const (
+	FilterTypeExact   FilterType = "exact"
+	FilterTypePartial FilterType = "partial"
+	FilterTypeCustom  FilterType = "custom"
+
+	SortDirectionAscending  SortDirection = "ASC"
+	SortDirectionDescending SortDirection = "DESC"
+)
+
 type FilterParam struct {
-	DisplayName  string
-	FieldName    string
-	InternalName string
-	FilterType   constants.FilterType
-	Callback     func(db *gorm.DB, value string) *gorm.DB
+	DisplayName       string
+	FieldName         string
+	InternalName      string
+	DisplayFilterType string
+	FilterType        FilterType
+	Callback          func(db *gorm.DB, value string) *gorm.DB
 }
 
 type SortParam struct {
-	DisplayName string
-	Field       string
-	Direction   constants.SortDirection
+	DisplayName  string
+	FieldName    string
+	InternalName string
+	Direction    SortDirection
 }
 
-type Builder struct {
-	model          interface{}
+type Builder interface {
+	ApplyBuilder(db *gorm.DB, queryParams url.Values, model interface{}) (*gorm.DB, *response.Meta)
+}
+
+type builder struct {
 	AllowedFilters []FilterParam
 	AllowedSorts   []SortParam
 	DefaultSort    SortParam
 }
 
-// ExtractFilters parses query params and matches them to allowed filters
-func ExtractFilters(queryParams url.Values, allowedFilters []FilterParam) map[string]string {
+func NewBuilder(allowedFilters []FilterParam, allowedSorts []SortParam, defaultSort SortParam) Builder {
+	return &builder{
+		AllowedFilters: allowedFilters,
+		AllowedSorts:   allowedSorts,
+		DefaultSort:    defaultSort,
+	}
+}
+
+func (b *builder) getFilterField(param FilterParam) string {
+	if param.InternalName == "" {
+		return param.FieldName
+	}
+
+	return param.InternalName
+}
+
+func (b *builder) getSortField(param SortParam) string {
+	if param.InternalName == "" {
+		return param.FieldName
+	}
+
+	return param.InternalName
+}
+
+// extractFilters parses query params and matches them to allowed filters
+func (b *builder) extractFilters(queryParams url.Values, allowedFilters []FilterParam) map[string]string {
 	filters := make(map[string]string)
 	for _, filter := range allowedFilters {
-		if value := queryParams.Get(filter.InternalName); value != "" {
-			filters[filter.InternalName] = value
+		if value := queryParams.Get(fmt.Sprintf("filter[%s]", filter.FieldName)); value != "" {
+			filters[filter.FieldName] = value
 		}
 	}
 	return filters
 }
 
-// ExtractSorting parses query params for sorting (field and direction)
-func ExtractSorting(queryParams url.Values, allowedSorts []SortParam, defaultSort SortParam) (string, constants.SortDirection) {
+// extractSorting parses query params for sorting (field and direction)
+func (b *builder) extractSorting(queryParams url.Values, allowedSorts []SortParam, defaultSort SortParam) (string, SortDirection) {
 	sortField := queryParams.Get("sort")
-	sortDirection := constants.SortDirectionAscending
+	sortDirection := SortDirectionAscending
 	if strings.HasPrefix(sortField, "-") {
-		sortDirection = constants.SortDirectionDescending
+		sortDirection = SortDirectionDescending
 		sortField = strings.TrimPrefix(sortField, "-")
 	}
 
 	isValidSort := false
 	for _, sort := range allowedSorts {
-		if sort.Field == sortField {
+		if sort.FieldName == sortField {
+			sortField = b.getSortField(sort)
 			isValidSort = true
 			break
 		}
 	}
 
 	if !isValidSort {
-		sortField = defaultSort.Field
+		sortField = b.getSortField(defaultSort)
 		sortDirection = defaultSort.Direction
 	}
 
 	return sortField, sortDirection
 }
 
-// ExtractPagination parses query params for pagination (limit and page)
-func ExtractPagination(queryParams url.Values) (int, int) {
+// extractPagination parses query params for pagination (limit and page)
+func (b *builder) extractPagination(queryParams url.Values) (int, int) {
 	limit, err := strconv.Atoi(queryParams.Get("limit"))
 	if err != nil || limit < 1 {
 		limit = constants.DefaultPerPage
@@ -81,29 +126,83 @@ func ExtractPagination(queryParams url.Values) (int, int) {
 	return limit, page
 }
 
-func (b *Builder) ApplyBuilder(db *gorm.DB, queryParams url.Values) *gorm.DB {
-	filters := ExtractFilters(queryParams, b.AllowedFilters)
+func (b *builder) getFilterMeta(queryParams url.Values) []response.FilterMeta {
+	var filters []response.FilterMeta
+	for _, filter := range b.AllowedFilters {
+		value := queryParams.Get(fmt.Sprintf("filter[%s]", filter.FieldName))
+		filters = append(filters, response.FilterMeta{
+			Name:       filter.FieldName,
+			Label:      filter.DisplayName,
+			FilterType: filter.DisplayFilterType,
+			Value:      value,
+		})
+	}
+	return filters
+}
+
+func (b *builder) getSortMeta() []response.SortMeta {
+	var sorts []response.SortMeta
+	for _, sort := range b.AllowedSorts {
+		sorts = append(sorts, response.SortMeta{
+			Name:  sort.FieldName,
+			Label: sort.DisplayName,
+		})
+	}
+	return sorts
+}
+
+func (b *builder) ApplyBuilder(db *gorm.DB, queryParams url.Values, model interface{}) (*gorm.DB, *response.Meta) {
+	filters := b.extractFilters(queryParams, b.AllowedFilters)
 
 	for _, filter := range b.AllowedFilters {
-		if value, ok := filters[filter.InternalName]; ok {
+		if value, ok := filters[filter.FieldName]; ok {
 			switch filter.FilterType {
-			case constants.FilterTypeExact:
-				db = db.Where(filter.FieldName+" = ?", value)
-			case constants.FilterTypePartial:
-				db = db.Where(filter.FieldName+" ILIKE ?", "%"+value+"%")
-			case constants.FilterTypeCustom:
+			case FilterTypeExact:
+				field := b.getFilterField(filter)
+				db = db.Where(field+" = ?", value)
+			case FilterTypePartial:
+				field := b.getFilterField(filter)
+				db = db.Where(field+" ILIKE ?", "%"+value+"%")
+			case FilterTypeCustom:
 				if filter.Callback != nil {
 					db = filter.Callback(db, value)
 				}
+			default: // Fallback if filter type not defined
+				field := b.getFilterField(filter)
+				db = db.Where(field+" = ?", value)
 			}
 		}
 	}
 
-	sortField, sortDirection := ExtractSorting(queryParams, b.AllowedSorts, b.DefaultSort)
+	var count int64
+	db.Model(model).Count(&count)
+
+	sortField, sortDirection := b.extractSorting(queryParams, b.AllowedSorts, b.DefaultSort)
 	db = db.Order(sortField + " " + string(sortDirection))
 
-	limit, page := ExtractPagination(queryParams)
+	limit, page := b.extractPagination(queryParams)
 	db = db.Offset((page - 1) * limit).Limit(limit)
 
-	return db
+	defaultSort := b.DefaultSort.FieldName
+	if b.DefaultSort.Direction == SortDirectionDescending {
+		defaultSort = "-" + defaultSort
+	}
+
+	selectedSort := sortField
+	if sortDirection == SortDirectionDescending {
+		selectedSort = "-" + selectedSort
+	}
+
+	meta := &response.Meta{
+		Page:         page,
+		PerPage:      limit,
+		LastPage:     int(math.Ceil(float64(count) / float64(limit))),
+		Total:        count,
+		Filters:      b.getFilterMeta(queryParams),
+		Sorts:        b.getSortMeta(),
+		SelectedSort: selectedSort,
+		DefaultSort:  defaultSort,
+	}
+
+	return db, meta
 }

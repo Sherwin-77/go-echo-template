@@ -11,10 +11,12 @@ package mock_service
 
 import (
 	context "context"
+	url "net/url"
 	reflect "reflect"
 
 	entity "github.com/sherwin-77/go-echo-template/internal/entity"
 	dto "github.com/sherwin-77/go-echo-template/internal/http/dto"
+	response "github.com/sherwin-77/go-echo-template/pkg/response"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -101,18 +103,19 @@ func (mr *MockUserServiceMockRecorder) GetUserByID(ctx, id any) *gomock.Call {
 }
 
 // GetUsers mocks base method.
-func (m *MockUserService) GetUsers(ctx context.Context) ([]entity.User, error) {
+func (m *MockUserService) GetUsers(ctx context.Context, queryParams url.Values) ([]entity.User, *response.Meta, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUsers", ctx)
+	ret := m.ctrl.Call(m, "GetUsers", ctx, queryParams)
 	ret0, _ := ret[0].([]entity.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(*response.Meta)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetUsers indicates an expected call of GetUsers.
-func (mr *MockUserServiceMockRecorder) GetUsers(ctx any) *gomock.Call {
+func (mr *MockUserServiceMockRecorder) GetUsers(ctx, queryParams any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockUserService)(nil).GetUsers), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockUserService)(nil).GetUsers), ctx, queryParams)
 }
 
 // Login mocks base method.

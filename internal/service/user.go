@@ -3,7 +3,10 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"github.com/sherwin-77/go-echo-template/pkg/query"
+	"github.com/sherwin-77/go-echo-template/pkg/response"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -18,7 +21,7 @@ import (
 )
 
 type UserService interface {
-	GetUsers(ctx context.Context) ([]entity.User, error)
+	GetUsers(ctx context.Context, queryParams url.Values) ([]entity.User, *response.Meta, error)
 	GetUserByID(ctx context.Context, id string) (*entity.User, error)
 	CreateUser(ctx context.Context, request dto.UserRequest) (*entity.User, error)
 	UpdateUser(ctx context.Context, request dto.UpdateUserRequest) (*entity.User, error)
@@ -32,37 +35,33 @@ type userService struct {
 	tokenService   tokens.TokenService
 	userRepository repository.UserRepository
 	roleRepository repository.RoleRepository
+	userBuilder    query.Builder
 	cache          caches.Cache
 }
 
-func NewUserService(tokenService tokens.TokenService, userRepository repository.UserRepository, roleRepository repository.RoleRepository, cache caches.Cache) UserService {
-	return &userService{tokenService, userRepository, roleRepository, cache}
+func NewUserService(
+	tokenService tokens.TokenService,
+	userRepository repository.UserRepository,
+	roleRepository repository.RoleRepository,
+	userBuilder query.Builder,
+	cache caches.Cache,
+) UserService {
+	return &userService{tokenService, userRepository, roleRepository, userBuilder, cache}
 }
 
-func (s *userService) GetUsers(ctx context.Context) ([]entity.User, error) {
-	userKey := "users:all"
+func (s *userService) GetUsers(ctx context.Context, queryParams url.Values) ([]entity.User, *response.Meta, error) {
 	var users []entity.User
-	cachedData := s.cache.Get(userKey)
-	if cachedData != "" {
-		if err := json.Unmarshal([]byte(cachedData), &users); err != nil {
-			return nil, err
-		}
-	} else {
-		var err error
-		db := s.userRepository.SingleTransaction()
-		users, err = s.userRepository.GetUsers(ctx, db)
-		if err != nil {
-			return nil, err
-		}
+	var err error
+	var meta *response.Meta
+	db := s.userRepository.SingleTransaction()
 
-		data, _ := json.Marshal(users)
-
-		if err := s.cache.Set(userKey, string(data), 5*time.Minute); err != nil {
-			return nil, err
-		}
+	db, meta = s.userBuilder.ApplyBuilder(db, queryParams, &entity.User{})
+	users, err = s.userRepository.GetUsers(ctx, db)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	return users, nil
+	return users, meta, nil
 }
 
 func (s *userService) GetUserByID(ctx context.Context, id string) (*entity.User, error) {

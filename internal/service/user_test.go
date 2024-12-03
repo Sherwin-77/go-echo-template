@@ -9,19 +9,23 @@ import (
 	"github.com/sherwin-77/go-echo-template/internal/entity"
 	"github.com/sherwin-77/go-echo-template/internal/http/dto"
 	"github.com/sherwin-77/go-echo-template/internal/service"
+	"github.com/sherwin-77/go-echo-template/pkg/response"
 	mock_caches "github.com/sherwin-77/go-echo-template/test/mock/pkg/caches"
+	mock_query "github.com/sherwin-77/go-echo-template/test/mock/pkg/query"
 	mock_tokens "github.com/sherwin-77/go-echo-template/test/mock/pkg/tokens"
 	mock_repository "github.com/sherwin-77/go-echo-template/test/mock/repository"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"net/url"
 	"testing"
 )
 
 type UserTestSuite struct {
 	suite.Suite
 	ctrl         *gomock.Controller
+	userBuilder  *mock_query.MockBuilder
 	repo         *mock_repository.MockUserRepository
 	roleRepo     *mock_repository.MockRoleRepository
 	tokenService *mock_tokens.MockTokenService
@@ -31,11 +35,12 @@ type UserTestSuite struct {
 
 func (s *UserTestSuite) SetupTest() {
 	s.ctrl = gomock.NewController(s.T())
+	s.userBuilder = mock_query.NewMockBuilder(s.ctrl)
 	s.repo = mock_repository.NewMockUserRepository(s.ctrl)
 	s.roleRepo = mock_repository.NewMockRoleRepository(s.ctrl)
 	s.tokenService = mock_tokens.NewMockTokenService(s.ctrl)
 	s.cache = mock_caches.NewMockCache(s.ctrl)
-	s.userService = service.NewUserService(s.tokenService, s.repo, s.roleRepo, s.cache)
+	s.userService = service.NewUserService(s.tokenService, s.repo, s.roleRepo, s.userBuilder, s.cache)
 }
 
 func TestUserService(t *testing.T) {
@@ -43,61 +48,33 @@ func TestUserService(t *testing.T) {
 }
 
 func (s *UserTestSuite) TestGetUsers() {
-	keyFindAll := "users:all"
-	users := []entity.User{
-		{
-			Username: "admin",
-			Email:    "admin",
-		},
-	}
-	marshalledData, _ := json.Marshal(users)
-
-	s.Run("Failed unmarshal", func() {
-		s.cache.EXPECT().Get(keyFindAll).Return("invalid")
-		result, err := s.userService.GetUsers(context.Background())
-
-		s.Error(err)
-		s.Nil(result)
-	})
-
 	s.Run("Failed to get users", func() {
-		s.cache.EXPECT().Get(keyFindAll).Return("")
+		errorTest := errors.New("get users error")
+
 		s.repo.EXPECT().SingleTransaction().Return(nil)
-		s.repo.EXPECT().GetUsers(gomock.Any(), gomock.Any()).Return(nil, errors.New("get users error"))
-		result, err := s.userService.GetUsers(context.Background())
+		s.userBuilder.EXPECT().ApplyBuilder(gomock.Any(), url.Values{}, &entity.User{}).Return(nil, nil)
+		s.repo.EXPECT().GetUsers(gomock.Any(), gomock.Any()).Return(nil, errorTest)
+		result, meta, err := s.userService.GetUsers(context.Background(), url.Values{})
 
-		s.Error(err)
+		s.ErrorIs(err, errorTest)
 		s.Nil(result)
-	})
-
-	s.Run("Failed to set cache", func() {
-		s.cache.EXPECT().Get(keyFindAll).Return("")
-		s.repo.EXPECT().SingleTransaction().Return(nil)
-		s.repo.EXPECT().GetUsers(gomock.Any(), gomock.Any()).Return(users, nil)
-		s.cache.EXPECT().Set(keyFindAll, string(marshalledData), gomock.Any()).Return(errors.New("set cache error"))
-		result, err := s.userService.GetUsers(context.Background())
-
-		s.Error(err)
-		s.Nil(result)
+		s.Nil(meta)
 	})
 
 	s.Run("Get users successfully", func() {
-		s.cache.EXPECT().Get(keyFindAll).Return("")
+		var users []entity.User
 		s.repo.EXPECT().SingleTransaction().Return(nil)
+		s.userBuilder.EXPECT().ApplyBuilder(gomock.Any(), url.Values{}, &entity.User{}).Return(nil, &response.Meta{
+			SelectedSort: "-created_at",
+		})
 		s.repo.EXPECT().GetUsers(gomock.Any(), gomock.Any()).Return(users, nil)
-		s.cache.EXPECT().Set(keyFindAll, string(marshalledData), gomock.Any()).Return(nil)
-		result, err := s.userService.GetUsers(context.Background())
+		result, meta, err := s.userService.GetUsers(context.Background(), url.Values{})
 
 		s.Nil(err)
 		s.Equal(users, result)
-	})
-
-	s.Run("Get users from cache", func() {
-		s.cache.EXPECT().Get(keyFindAll).Return(string(marshalledData))
-		result, err := s.userService.GetUsers(context.Background())
-
-		s.Nil(err)
-		s.Equal(users, result)
+		s.Equal(response.Meta{
+			SelectedSort: "-created_at",
+		}, *meta)
 	})
 }
 
