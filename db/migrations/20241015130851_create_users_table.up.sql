@@ -1,3 +1,5 @@
+BEGIN;
+
 CREATE TABLE users (
     id UUID PRIMARY KEY NOT NULL,
     username VARCHAR(255) NOT NULL,
@@ -8,3 +10,5 @@ CREATE TABLE users (
 
     CONSTRAINT users_email_unique UNIQUE (email)
 );
+
+COMMIT;
