@@ -1,3 +1,5 @@
+BEGIN;
+
 CREATE TABLE role_users (
     role_id UUID NOT NULL,
     user_id UUID NOT NULL,
@@ -6,3 +8,5 @@ CREATE TABLE role_users (
     FOREIGN KEY (role_id) REFERENCES roles(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+COMMIT;

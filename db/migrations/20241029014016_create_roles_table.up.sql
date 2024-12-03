@@ -1,3 +1,5 @@
+BEGIN;
+
 CREATE TABLE roles (
     id UUID PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -5,3 +7,5 @@ CREATE TABLE roles (
     created_at TIMESTAMP(6) WITH TIME ZONE,
     updated_at TIMESTAMP(6) WITH TIME ZONE
 );
+
+COMMIT;

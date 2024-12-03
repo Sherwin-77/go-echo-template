@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sherwin-77/go-echo-template/configs"
+	"github.com/sherwin-77/go-echo-template/internal/entity"
 	"github.com/sherwin-77/go-echo-template/internal/http/handler"
 	mock_service "github.com/sherwin-77/go-echo-template/test/mock/service"
 	"github.com/stretchr/testify/suite"
@@ -42,7 +43,7 @@ func (s *UserTestSuite) TestGetUsers() {
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
-		s.userService.EXPECT().GetUsers(c.Request().Context()).Return(nil, errorTest)
+		s.userService.EXPECT().GetUsers(c.Request().Context(), gomock.Any()).Return(nil, nil, errorTest)
 		err := s.userHandler.GetUsers(c)
 
 		s.ErrorIs(err, errorTest)
@@ -54,7 +55,7 @@ func (s *UserTestSuite) TestGetUsers() {
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
-		s.userService.EXPECT().GetUsers(c.Request().Context()).Return(nil, nil)
+		s.userService.EXPECT().GetUsers(c.Request().Context(), gomock.Any()).Return(nil, nil, nil)
 		err := s.userHandler.GetUsers(c)
 
 		s.Nil(err)
@@ -144,7 +145,7 @@ func (s *UserTestSuite) TestRegisterUser() {
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
-		s.userService.EXPECT().Register(c.Request().Context(), gomock.Any()).Return(nil, true, nil)
+		s.userService.EXPECT().Register(c.Request().Context(), gomock.Any()).Return(&entity.User{}, true, nil)
 		err := s.userHandler.Register(c)
 
 		s.Nil(err)
@@ -279,7 +280,7 @@ func (s *UserTestSuite) TestUpdateUser() {
 		c.SetParamNames("id")
 		c.SetParamValues(uuid.NewString())
 
-		s.userService.EXPECT().UpdateUser(c.Request().Context(), gomock.Any()).Return(nil, errorTest)
+		s.userService.EXPECT().UpdateUser(c.Request().Context(), gomock.Any()).Return(&entity.User{}, errorTest)
 		err := s.userHandler.UpdateUser(c)
 
 		s.ErrorIs(err, errorTest)
@@ -297,7 +298,7 @@ func (s *UserTestSuite) TestUpdateUser() {
 		c.SetParamNames("id")
 		c.SetParamValues(uuid.NewString())
 
-		s.userService.EXPECT().UpdateUser(c.Request().Context(), gomock.Any()).Return(nil, nil)
+		s.userService.EXPECT().UpdateUser(c.Request().Context(), gomock.Any()).Return(&entity.User{}, nil)
 		err := s.userHandler.UpdateUser(c)
 
 		s.Nil(err)
