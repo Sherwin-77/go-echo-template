@@ -31,7 +31,9 @@ func (h *RoleHandler) GetRoles(ctx echo.Context) error {
 		return err
 	}
 
-	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Success", roles, nil))
+	rolesResponse := dto.NewRolesResponse(roles)
+
+	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Success", rolesResponse, nil))
 }
 
 // GetRoleByID
@@ -54,7 +56,9 @@ func (h *RoleHandler) GetRoleByID(ctx echo.Context) error {
 		return err
 	}
 
-	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Success", role, nil))
+	roleResponse := dto.NewRoleResponse(role)
+
+	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Success", roleResponse, nil))
 }
 
 // CreateRole
@@ -83,7 +87,9 @@ func (h *RoleHandler) CreateRole(ctx echo.Context) error {
 		return err
 	}
 
-	return ctx.JSON(http.StatusCreated, response.NewResponse(http.StatusCreated, "Role Created", role, nil))
+	roleResponse := dto.NewRoleResponse(role)
+
+	return ctx.JSON(http.StatusCreated, response.NewResponse(http.StatusCreated, "Role Created", roleResponse, nil))
 }
 
 // UpdateRole
@@ -113,7 +119,9 @@ func (h *RoleHandler) UpdateRole(ctx echo.Context) error {
 		return err
 	}
 
-	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Role Updated", role, nil))
+	roleResponse := dto.NewRoleResponse(role)
+
+	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Role Updated", roleResponse, nil))
 }
 
 // DeleteRole

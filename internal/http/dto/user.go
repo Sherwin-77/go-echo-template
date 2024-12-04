@@ -34,7 +34,8 @@ func NewUserResponse(user *entity.User) UserResponse {
 		Email:    user.Email,
 	}
 	for _, role := range user.Roles {
-		userResponse.Roles = append(userResponse.Roles, NewRoleResponse(role))
+		roleResponse := NewRoleResponse(role)
+		userResponse.Roles = append(userResponse.Roles, &roleResponse)
 	}
 
 	return userResponse

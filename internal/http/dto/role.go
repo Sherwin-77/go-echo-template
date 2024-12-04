@@ -28,10 +28,18 @@ type RoleResponse struct {
 	AuthLevel int    `json:"auth_level"`
 }
 
-func NewRoleResponse(role *entity.Role) *RoleResponse {
-	return &RoleResponse{
+func NewRoleResponse(role *entity.Role) RoleResponse {
+	return RoleResponse{
 		ID:        role.ID.String(),
 		Name:      role.Name,
 		AuthLevel: role.AuthLevel,
 	}
+}
+
+func NewRolesResponse(roles []entity.Role) []RoleResponse {
+	var response []RoleResponse
+	for _, role := range roles {
+		response = append(response, NewRoleResponse(&role))
+	}
+	return response
 }
