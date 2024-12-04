@@ -21,6 +21,14 @@ func NewUserHandler(userService service.UserService) UserHandler {
  * Admin Handlers
 **/
 
+// GetUsers
+//
+//	@summary	Get All Users
+//	@tags		User
+//	@accept		json
+//	@produce	json
+//	@Success	200	{object}	response.Response{data=[]dto.UserResponse}
+//	@router		/admin/users [get]
 func (h *UserHandler) GetUsers(ctx echo.Context) error {
 	users, meta, err := h.userService.GetUsers(ctx.Request().Context(), ctx.QueryParams())
 	usersResponse := dto.NewUsersResponse(users)
@@ -32,6 +40,15 @@ func (h *UserHandler) GetUsers(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Success", usersResponse, meta))
 }
 
+// GetUserByID
+//
+//	@Summary	Get User By ID
+//	@Tags		[Admin] User
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		string	true	"The User ID"
+//	@Success	200	{object}	response.Response{data=dto.UserResponse}
+//	@Router		/admin/users/{id} [get]
 func (h *UserHandler) GetUserByID(ctx echo.Context) error {
 	userID := ctx.Param("id")
 	if userID == "" {
@@ -46,6 +63,15 @@ func (h *UserHandler) GetUserByID(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Success", user, nil))
 }
 
+// CreateUser
+//
+//	@Summary	Create User
+//	@Tags		[Admin] User
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body		dto.UserRequest	true	"User Request"
+//	@Success	201		{object}	response.Response{data=dto.UserResponse}
+//	@Router		/admin/users [post]
 func (h *UserHandler) CreateUser(ctx echo.Context) error {
 	var req dto.UserRequest
 
@@ -71,6 +97,16 @@ func (h *UserHandler) CreateUser(ctx echo.Context) error {
 	return ctx.JSON(http.StatusCreated, response.NewResponse(http.StatusCreated, msg, userResponse, nil))
 }
 
+// UpdateUser
+//
+//	@Summary	Update User
+//	@Tags		[Admin] User
+//	@Accept		json
+//	@Produce	json
+//	@Param		id		path		string					true	"The User ID"
+//	@Param		request	body		dto.UpdateUserRequest	true	"Update User Request"
+//	@Success	200		{object}	response.Response{data=dto.UserResponse}
+//	@Router		/admin/users/{id} [patch]
 func (h *UserHandler) UpdateUser(ctx echo.Context) error {
 	var req dto.UpdateUserRequest
 
@@ -93,6 +129,15 @@ func (h *UserHandler) UpdateUser(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "User Updated", userResponse, nil))
 }
 
+// DeleteUser
+//
+//	@Summary	Delete User
+//	@Tags		[Admin] User
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		string	true	"The User ID"
+//	@Success	200	{object}	response.Response{data=dto.UserResponse}
+//	@Router		/admin/users/{id} [delete]
 func (h *UserHandler) DeleteUser(ctx echo.Context) error {
 	userID := ctx.Param("id")
 	if userID == "" {
@@ -106,6 +151,15 @@ func (h *UserHandler) DeleteUser(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "User Deleted", nil, nil))
 }
 
+// ChangeRole
+//
+//	@Summary	Change Role
+//	@Tags		[Admin] User
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body		dto.ChangeRoleRequest	true	"Change Role Request"
+//	@Success	200		{object}	response.Response{data=nil}
+//	@Router		/users/role [patch]
 func (h *UserHandler) ChangeRole(ctx echo.Context) error {
 	var req dto.ChangeRoleRequest
 
@@ -128,10 +182,28 @@ func (h *UserHandler) ChangeRole(ctx echo.Context) error {
  * User Handlers
 **/
 
+// Register
+//
+//	@Summary	Register User
+//	@Tags		User
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body		dto.UserRequest	true	"User Request"
+//	@Success	201		{object}	response.Response{data=dto.UserResponse}
+//	@Router		/register [post]
 func (h *UserHandler) Register(ctx echo.Context) error {
 	return h.CreateUser(ctx)
 }
 
+// Login
+//
+//	@Summary	Login User
+//	@Tags		User
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body		dto.LoginRequest				true	"Login Request"
+//	@Success	200		{object}	response.Response{data=string}	"token"
+//	@Router		/login [post]
 func (h *UserHandler) Login(ctx echo.Context) error {
 	var req dto.LoginRequest
 
@@ -152,6 +224,15 @@ func (h *UserHandler) Login(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Login Success", token, nil))
 }
 
+// EditProfile
+//
+//	@Summary	Edit Profile
+//	@Tags		User
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body		dto.UpdateUserRequest	true	"Update User Request"
+//	@Success	200		{object}	response.Response{data=dto.UserResponse}
+//	@Router		/profile [patch]
 func (h *UserHandler) EditProfile(ctx echo.Context) error {
 	userID := ctx.Get("user_id").(string)
 	var req dto.UpdateUserRequest

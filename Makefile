@@ -27,3 +27,7 @@ seed:
 
 mockgen:
 	sh ./script/generate-mock.sh
+
+apigen:
+	swag fmt
+	swag init -g ./cmd/app/main.go --pd -o ./docs

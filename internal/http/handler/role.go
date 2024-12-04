@@ -16,6 +16,14 @@ func NewRoleHandler(roleService service.RoleService) RoleHandler {
 	return RoleHandler{roleService}
 }
 
+// GetRoles
+//
+//	@Summary	Get All Roles
+//	@Tags		[Admin] Role
+//	@Accept		json
+//	@Produce	json
+//	@Success	200	{object}	response.Response{data=[]dto.RoleResponse}
+//	@Router		/admin/roles [get]
 func (h *RoleHandler) GetRoles(ctx echo.Context) error {
 	roles, err := h.RoleService.GetRoles(ctx.Request().Context())
 
@@ -26,6 +34,15 @@ func (h *RoleHandler) GetRoles(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Success", roles, nil))
 }
 
+// GetRoleByID
+//
+//	@Summary	Get Role By ID
+//	@Tags		[Admin] Role
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		string	true	"The Role ID"
+//	@Success	200	{object}	response.Response{data=dto.RoleResponse}
+//	@Router		/admin/roles/{id} [get]
 func (h *RoleHandler) GetRoleByID(ctx echo.Context) error {
 	roleID := ctx.Param("id")
 	if roleID == "" {
@@ -40,6 +57,15 @@ func (h *RoleHandler) GetRoleByID(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Success", role, nil))
 }
 
+// CreateRole
+//
+//	@Summary	Create Role
+//	@Tags		[Admin] Role
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body		dto.RoleRequest	true	"Role Request"
+//	@Success	201		{object}	response.Response{data=dto.RoleResponse}
+//	@Router		/admin/roles [post]
 func (h *RoleHandler) CreateRole(ctx echo.Context) error {
 	var req dto.RoleRequest
 
@@ -60,6 +86,16 @@ func (h *RoleHandler) CreateRole(ctx echo.Context) error {
 	return ctx.JSON(http.StatusCreated, response.NewResponse(http.StatusCreated, "Role Created", role, nil))
 }
 
+// UpdateRole
+//
+//	@Summary	Update Role
+//	@Tags		[Admin] Role
+//	@Accept		json
+//	@Produce	json
+//	@Param		id		path		string					true	"The Role ID"
+//	@Param		request	body		dto.UpdateRoleRequest	true	"Update Role Request"
+//	@Success	200		{object}	response.Response{data=dto.RoleResponse}
+//	@Router		/admin/roles/{id} [patch]
 func (h *RoleHandler) UpdateRole(ctx echo.Context) error {
 	var req dto.UpdateRoleRequest
 
@@ -80,6 +116,15 @@ func (h *RoleHandler) UpdateRole(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Role Updated", role, nil))
 }
 
+// DeleteRole
+//
+//	@Summary	Delete Role
+//	@Tags		[Admin] Role
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		string	true	"The Role ID"
+//	@Success	200	{object}	response.Response{data=nil}
+//	@Router		/admin/roles/{id} [delete]
 func (h *RoleHandler) DeleteRole(ctx echo.Context) error {
 	roleID := ctx.Param("id")
 	if roleID == "" {
