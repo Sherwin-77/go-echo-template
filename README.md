@@ -33,7 +33,7 @@ Migration automatically run everytime docker container start
 | Unit Test                     | 🚧     |
 | Docker                        | ✔️     |
 | Migration                     | ✔️     |
-| API Documentation             | ❌      |
+| API Documentation             | 🚧      |
 | Auto handle role & permission | ❌      |
 | Github Workflow               | ❌      |
 
