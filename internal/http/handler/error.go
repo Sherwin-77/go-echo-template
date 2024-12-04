@@ -66,6 +66,6 @@ func HTTPErrorHandler(err error, c echo.Context) {
 	}
 
 	if !c.Response().Committed {
-		_ = c.JSON(code, response.NewResponse(code, message.(string), nil, nil))
+		_ = c.JSON(code, response.NewErrorResponse(code, message.(string), nil))
 	}
 }
