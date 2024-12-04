@@ -4,7 +4,13 @@ type Response struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
-	Meta    *Meta       `json:"meta,omitempty"`
+	Meta    *Meta       `json:"meta,omitempty" swaggerignore:"true"`
+}
+
+type ErrorResponse struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
 }
 
 type Meta struct {
@@ -36,5 +42,13 @@ func NewResponse(code int, message string, data interface{}, meta *Meta) *Respon
 		Message: message,
 		Data:    data,
 		Meta:    meta,
+	}
+}
+
+func NewErrorResponse(code int, message string, data interface{}) *ErrorResponse {
+	return &ErrorResponse{
+		Code:    code,
+		Message: message,
+		Data:    data,
 	}
 }

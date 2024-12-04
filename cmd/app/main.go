@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"os"
 	"os/signal"
 	"time"
@@ -14,8 +15,18 @@ import (
 	"github.com/sherwin-77/go-echo-template/pkg/caches"
 	"github.com/sherwin-77/go-echo-template/pkg/database"
 	"github.com/sherwin-77/go-echo-template/pkg/server"
+
+	_ "github.com/sherwin-77/go-echo-template/docs"
 )
 
+//	@title			go-echo-template
+//	@version		1.0
+//	@description	This is a sample server for go-echo-template.
+
+//	@host		localhost:8080
+//	@BasePath	/api/v1
+
+// @securityDefinitions.bearerauth
 func main() {
 	config := configs.LoadConfig()
 
@@ -27,6 +38,7 @@ func main() {
 	cache := caches.NewCache(caches.InitRedis(config.Redis))
 
 	echoServer := server.NewServer()
+	echoServer.GET("/swagger/*", echoSwagger.WrapHandler)
 	echoServer.Use(middleware.LoggerWithConfig(configs.GetEchoLoggerConfig()))
 	echoServer.Use(middleware.RecoverWithConfig(configs.GetEchoRecoverConfig()))
 	echoServer.Validator = configs.NewAppValidator()
