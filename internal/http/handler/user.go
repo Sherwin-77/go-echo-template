@@ -247,9 +247,5 @@ func (h *UserHandler) EditProfile(ctx echo.Context) error {
 		return err
 	}
 
-	if userID != req.ID {
-		return echo.NewHTTPError(http.StatusForbidden, http.StatusText(http.StatusForbidden))
-	}
-
 	return h.UpdateUser(ctx)
 }

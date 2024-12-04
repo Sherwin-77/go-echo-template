@@ -232,7 +232,22 @@ func (s *UserTestSuite) TestEditProfile() {
 	})
 
 	s.Run("Error validate", func() {
+		userID := uuid.NewString()
+		e := echo.New()
+		e.Validator = configs.NewAppValidator()
+		req := httptest.NewRequest(http.MethodPatch, "/profile", strings.NewReader(`{"email": "invalid"}`))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.Set("user_id", userID)
 
+		c.SetPath("/:id")
+		c.SetParamNames("id")
+		c.SetParamValues(userID)
+
+		err := s.userHandler.EditProfile(c)
+
+		s.ErrorAs(err, &validator.ValidationErrors{})
 	})
 }
 
