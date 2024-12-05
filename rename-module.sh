@@ -9,4 +9,4 @@ OLD_MODULE="github.com/sherwin-77/go-echo-template"
 go mod edit -module $NEW_MODULE
 
 # Rename all imported modules in .go files recursively
-find . -type f -name "*.go" -not -path "./vendor/*" -exec sed -i -e 's/{OLD_MODULE},{NEW_MODULE}/g' {} \;
+find . -type f -name "*.go" -not -path "./vendor/*" -exec sed -i -e "s|$OLD_MODULE|$NEW_MODULE|g" {} \;
