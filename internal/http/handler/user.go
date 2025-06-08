@@ -136,7 +136,7 @@ func (h *UserHandler) UpdateUser(ctx echo.Context) error {
 //	@Accept		json
 //	@Produce	json
 //	@Param		id	path		string	true	"The User ID"
-//	@Success	200	{object}	response.Response{data=dto.UserResponse}
+//	@Success	200	{object}	response.Response{data=nil}
 //	@Router		/admin/users/{id} [delete]
 func (h *UserHandler) DeleteUser(ctx echo.Context) error {
 	userID := ctx.Param("id")
@@ -224,6 +224,20 @@ func (h *UserHandler) Login(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, response.NewResponse(http.StatusOK, "Login Success", token, nil))
 }
 
+// ShowProfile
+//
+//	@Summary	Show Profile
+//	@Tags		User
+//	@Accept		json
+//	@Produce	json
+//	@Success	200	{object}	response.Response{data=dto.UserResponse}
+func (h *UserHandler) ShowProfile(ctx echo.Context) error {
+	userID := ctx.Get("user_id").(string)
+	ctx.SetParamNames("id")
+	ctx.SetParamValues(userID)
+	return h.GetUserByID(ctx)
+}
+
 // EditProfile
 //
 //	@Summary	Edit Profile
@@ -235,17 +249,8 @@ func (h *UserHandler) Login(ctx echo.Context) error {
 //	@Router		/profile [patch]
 func (h *UserHandler) EditProfile(ctx echo.Context) error {
 	userID := ctx.Get("user_id").(string)
-	var req dto.UpdateUserRequest
-
-	if err := ctx.Bind(&req); err != nil {
-		return err
-	}
-
-	req.ID = userID
-
-	if err := ctx.Validate(req); err != nil {
-		return err
-	}
-
+	// Inject user_id
+	ctx.SetParamNames("id")
+	ctx.SetParamValues(userID)
 	return h.UpdateUser(ctx)
 }

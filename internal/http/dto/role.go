@@ -2,6 +2,10 @@ package dto
 
 import "github.com/sherwin-77/go-echo-template/internal/entity"
 
+/* -------------------------------------------------------------------------- */
+/*                                   Request                                  */
+/* -------------------------------------------------------------------------- */
+
 type RoleRequest struct {
 	Name      string `json:"name" validate:"required"`
 	AuthLevel int    `json:"auth_level" validate:"required"`
@@ -21,6 +25,10 @@ type ChangeRoleRequestItem struct {
 	ID     string `json:"id" validate:"required,uuid"`
 	Action string `json:"action" validate:"required,oneof=add remove"`
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                  Response                                  */
+/* -------------------------------------------------------------------------- */
 
 type RoleResponse struct {
 	ID        string `json:"id"`

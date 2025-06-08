@@ -2,6 +2,10 @@ package dto
 
 import "github.com/sherwin-77/go-echo-template/internal/entity"
 
+/* -------------------------------------------------------------------------- */
+/*                                   Request                                  */
+/* -------------------------------------------------------------------------- */
+
 type UserRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Username string `json:"username" validate:"required"`
@@ -19,6 +23,10 @@ type LoginRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                  Response                                  */
+/* -------------------------------------------------------------------------- */
 
 type UserResponse struct {
 	ID       string          `json:"id"`

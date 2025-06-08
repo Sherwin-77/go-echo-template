@@ -9,8 +9,6 @@ import (
 	"github.com/sherwin-77/go-echo-template/internal/repository"
 	"github.com/sherwin-77/go-echo-template/internal/service"
 	"github.com/sherwin-77/go-echo-template/pkg/caches"
-	"github.com/sherwin-77/go-echo-template/pkg/constants"
-	"github.com/sherwin-77/go-echo-template/pkg/query"
 	"github.com/sherwin-77/go-echo-template/pkg/tokens"
 	"gorm.io/gorm"
 )
@@ -27,17 +25,7 @@ func BuildV1Routes(config *configs.Config, db *gorm.DB, cache caches.Cache, grou
 	roleRepository := repository.NewRoleRepository(db)
 
 	// Initialize builders
-	userBuilder := query.NewBuilder(
-		[]query.FilterParam{
-			{DisplayName: "Email", FieldName: "email", DisplayFilterType: constants.FilterResponsePartialText, FilterType: query.FilterTypePartial},
-			{DisplayName: "Name", FieldName: "name", InternalName: "username", DisplayFilterType: constants.FilterResponsePartialText, FilterType: query.FilterTypePartial},
-		},
-		[]query.SortParam{
-			{DisplayName: "Email", FieldName: "email", InternalName: "Email"},
-			{DisplayName: "Username", FieldName: "username", InternalName: "username"},
-		},
-		query.SortParam{DisplayName: "Email", FieldName: "email", InternalName: "email", Direction: query.SortDirectionAscending},
-	)
+	userBuilder := NewUserQueryBuilder()
 
 	// Initialize services
 	tokenService := tokens.NewTokenService(config.JWTSecret)

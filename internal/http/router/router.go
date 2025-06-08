@@ -24,6 +24,14 @@ func UserRoutes(userHandler handler.UserHandler, authMiddleware middlewares.Auth
 			Middlewares: []echo.MiddlewareFunc{},
 		},
 		{
+			Method:  http.MethodGet,
+			Path:    "/profile",
+			Handler: userHandler.ShowProfile,
+			Middlewares: []echo.MiddlewareFunc{
+				authMiddleware.Authenticated,
+			},
+		},
+		{
 			Method:  http.MethodPut,
 			Path:    "/profile",
 			Handler: userHandler.EditProfile,
